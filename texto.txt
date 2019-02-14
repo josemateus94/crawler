@@ -1,0 +1,8 @@
+https://www.seminovosbh.com.br​ .
+
+    -​ Pesquisa de veículos​ , sendo possível realizar filtros semelhantes ao do
+    site. Deverá ser retornado as informações básicas dos veículos (ano, modelo,
+    quilometragem e valor)
+    - ​ Detalhes do veículo​ , retornando detalhadamente todos os dados de um
+    veículo (Ano, quilometragem, tipo de combustível, cor, acessórios e
+    observações)
