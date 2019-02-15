@@ -1,6 +1,6 @@
 
-Não esquecer no arquivo.env.
-Executar o comando php artisan key:generate para gera uma nova chave.
+<p>Não esquecer no arquivo.env</p>
+<p>Executar o comando php artisan key:generate para gera uma nova chave.</p>
 
 
 <p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
