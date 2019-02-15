@@ -3,85 +3,79 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Goutte\Client;
 
 class SeminovosController extends Controller{
     
     private $url;
 
     public function index(){
-        $this->url = 'https://www.seminovosbh.com.br/';
-        $pesquisa = file_get_contents($this->url);
-        $pesquisa = explode('class="input-line"', $pesquisa);        
-        unset($pesquisa[0]);        
-        //dd($pesquisa);
-        $dadosPesquisa = $this->crawlerPesquisa($pesquisa[1]);
-        $zeroSemeNovo = $this->zeroSemeNovo($pesquisa[2]);
-        $marca = $this->marca($pesquisa[3]);
+
+        $client = new Client();
+        $crawler = $client->request('GET', 'https://www.seminovosbh.com.br/');
+        $html = '';
+        $crawler->filter('#simpleSearch .input-line')->each(function ($node, $index) use(&$html) {
+            
+            if ($index >=2) {
+                $html .=$node->html()."</br>";
+            }                     
+        });
+        return view('seminovos',['html' => $html]);            
+    }
+
+    public function pesquisar(Request $request){
+
+        $marca = ($request->marca) ? ('/marca/'.$request->marca) : '' ;
+        $modelo = ($request->modelo) ? ('/modelo/'.$request->modelo) : '' ;
+
+        $valor1 = ($request->valor1) ? ('/valor1/'.$request->valor1) : '' ;
+        $valor2 = ($request->valor2) ? ('/valor2/'.$request->valor2) : '' ;
+
+        $ano1 = ($request->ano1) ? ('/ano1/'.$request->ano1) : '' ;
+        $ano2 = ($request->ano2) ? ('/ano2/'.$request->ano2) : '' ;
+
+        $idCidade = ($request->idCidade) ? ('/cidade/'.$request->idCidade) : '' ;
         
-        return view('seminovos',[
-            'dadosPesquisa' =>$dadosPesquisa,
-            'zeroSemeNovo' =>$zeroSemeNovo,
-            'marca' =>$marca
-            ]
-        );        
-    }
-
-    private function crawlerPesquisa($dadosPesquisa){
-        $dadosVeiculos = explode('<input',$dadosPesquisa);
-        unset($dadosVeiculos[0]);
-        $dadosPesquisa = array();                
-        $aux = array();
-        foreach ($dadosVeiculos as $key => $dadosVeiculo) {
-            $aux = array();
-            $dados = explode(' ', strstr($dadosVeiculo, 'id'))[0]; 
-            $dados = (str_replace('"', "", explode('id=', $dados)[1]));                       
-            array_push($aux, $dados);  
-
-            $dados = explode(' ', strstr($dadosVeiculo, 'name'))[0];            
-            array_push($aux, $dados);  
-
-            $dados = (explode(' ', strstr($dadosVeiculo, 'value'))[0]);  
-            $dados = (str_replace('"', "", explode('value=', $dados)[1]));                    
-            $dados = (explode('>',$dados))[0];
-            array_push($aux, $dados);  
-            
-            array_push($dadosPesquisa, $aux);                          
-        }
-        return $dadosPesquisa;
-    }
-    
-    private function zeroSemeNovo($dadosPesquisa){   
-        $dadosVeiculos = explode('<input type="checkbox"', $dadosPesquisa);
-        unset($dadosVeiculos[0]);
-        $dadosPesquisa = array();                
-        $aux = array();
-        foreach ($dadosVeiculos as $key => $dadosVeiculo) {
-            $aux = array();
-            $dados = explode(' ', strstr($dadosVeiculo, 'id'))[0]; 
-            $dados = (str_replace('"', "", explode('id=', $dados)[1]));                       
-            array_push($aux, $dados);  
-
-            $dados = explode(' ', strstr($dadosVeiculo, 'name'))[0];            
-            array_push($aux, $dados);  
-
-            $dados = (explode(' ', strstr($dadosVeiculo, 'value'))[0]);  
-            $dados = (str_replace('"', "", explode('value=', $dados)[1]));                    
-            $dados = (explode('>',$dados))[0];
-            array_push($aux, $dados);  
-
-            $dados = explode('/>', $dadosVeiculo)[1];
-            $dados = str_replace(" ","", explode('<img', $dados)[0]);            
-            array_push($aux, $dados);  
-            
-            array_push($dadosPesquisa, $aux);                          
-        }
-        return $dadosPesquisa;
-    }
-
-    private function marca($dadosPesquisa){
-        $dadosVeiculos = explode('class="input-line"', $dadosPesquisa)[0];        
-        $dadosVeiculos = explode('<option', $dadosVeiculos);
-        unset($dadosVeiculos[0]);
-        return $dadosVeiculos;
+        $usuario ='todos'; 
+        if ($request->particular && $request->revenda ) {
+            $usuario ='todos';  
+        }elseif($request->particular) {
+            $usuario ='particular'; 
+        }elseif($request->revenda){
+            $usuario ='revenda'; 
+        }        
+        $url = 'https://www.seminovosbh.com.br/resultadobusca/index/veiculo/'.$request->veiculo.'/estado-conservacao/'.$request->veiculo_zero_km.''
+        .$marca.''.$modelo.''.$valor1.''.$valor2.''.$ano1.''.$ano2.''.$idCidade.'/usuario/'.$usuario;        
+        $client = new Client();
+        $crawler = $client->request('GET', $url);
+        $html = '';
+        $data = array();
+        $crawler->filter('.bg-busca')->each(function ($node, $index) use(&$html, &$data) {
+            $aux = $node->html();             
+            $p = explode('<p>', $aux);
+            $ano = explode('</p>', $p[1])[0];
+            $km = trim(explode(' </p>', $p[2])[0]);
+            $portas = explode('</p>', $p[3])[0];
+            $banco = explode('</p>', $p[4])[0];
+            $gasolina = explode('</p>', $p[5])[0];
+            $descricoes = explode('<span>',$p[5]);
+            unset($descricoes[0]);            
+            $des = array();
+            foreach ($descricoes as $key => $descricao) {
+                $descricao = explode('</span>', $descricao)[0];
+                array_push($des, $descricao);
+            }
+            $aux = explode('<h4>', $aux)[1];
+            $aux = explode('<span', $aux);
+            $nome = $aux[0];
+            $nome = explode('<span',$nome)[0];
+            $aux = explode('</span>', $aux[1])[0];
+            $valor = str_replace(' class="preco_busca"> ','', $aux);
+            $valor = explode('<img', $valor)[0];
+            $informacao = array();
+            $informacao = array('nome'=> $nome, 'valor'=> $valor, 'ano'=> $ano, 'km'=> $km, 'portas'=> $portas, 'banco'=> $banco, 'gasolina'=> $gasolina, 'descricao'=>$des);
+            array_push($data, $informacao);            
+        });
+        return response()->json($data, 200);        
     }
 }

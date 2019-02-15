@@ -9,18 +9,24 @@
     <title>Seminovos</title>
     <style>
         .container{
-            padding-top: 10px;
-        }
-	.descricao{
-            padding: 20px;
-        } 
+            padding-top: 30px;
+            margin-left: 5%; 
+            width: 80%             
+        }	
+        #mensagem{
+            text-align: center;
+            width: 80%;
+            height: 5%
+        }    
+        
     </style>
 </head>
 <body>
     <div class="container">
-        <main role="main">
             @yield('body')
-        </main>
     </div>    
 </body>
+
+<script src="{{ asset('js/app.js') }}" type='text/javascript'></script>
+    @yield('javaScript')
 </html>
