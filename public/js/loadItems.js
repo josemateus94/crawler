@@ -35,8 +35,7 @@ function _modelo(modelo, marca){
 }
 
 function pesquisar(){
-    arrayData = {};
-    /** informar os cados desejados */
+    arrayData = {};    
     arrayData.veiculo = $("input[type=radio][name='veiculo']:checked").val();
     arrayData.veiculo_zero_km = $("input[type=radio][name='veiculo_zero_km']:checked").val();
     arrayData.marca = ($('#marca').val());
